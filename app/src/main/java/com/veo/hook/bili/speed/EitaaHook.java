@@ -1,4 +1,4 @@
-package com.veo.hook.bili.speed;
+package com.moji.eitaaadremover;
 
 import android.view.View;
 import android.view.ViewGroup;
