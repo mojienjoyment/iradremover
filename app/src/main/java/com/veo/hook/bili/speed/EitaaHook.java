@@ -1,4 +1,4 @@
-package com.moji.eitaaadremover;
+package com.moji.iradremover;
 
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,16 +13,22 @@ public class EitaaHook implements IXposedHookLoadPackage {
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
+        // LOG 1: This will show EVERY app that loads
+        XposedBridge.log("=== Eitaa Ad Remover: handleLoadPackage called for: " + lpparam.packageName + " ===");
+
         // Only run this code if the app being loaded is Eitaa
-        // Note: Check the actual package name of Eitaa. It is usually "ir.eitaa.messenger"
         if (!lpparam.packageName.equals("ir.eitaa.messenger")) {
+            XposedBridge.log("Eitaa Ad Remover: Skipping " + lpparam.packageName + " (not Eitaa)");
             return; 
         }
 
-        XposedBridge.log("Eitaa Ad Remover: Loaded into " + lpparam.packageName);
+        XposedBridge.log("Eitaa Ad Remover: SUCCESS - Loaded into Eitaa!");
+        XposedBridge.log("Eitaa Ad Remover: ClassLoader: " + lpparam.classLoader);
 
         try {
-            // Hook the constructor of SimpleAdsList to prevent it from being created
+            XposedBridge.log("Eitaa Ad Remover: Attempting to hook SimpleAdsList constructor...");
+            
+            // Hook the constructor of SimpleAdsList
             XposedHelpers.findAndHookConstructor(
                 "ir.eitaa.ui.Components.SimpleAdsList", 
                 lpparam.classLoader, 
@@ -30,17 +36,22 @@ public class EitaaHook implements IXposedHookLoadPackage {
                 new XC_MethodHook() {
                     @Override
                     protected void beforeHookedMethod(MethodHookParam param) {
-                        // By setting the result to null, we stop the object from being created
+                        XposedBridge.log("Eitaa Ad Remover: BLOCKED SimpleAdsList creation!");
                         param.setResult(null);
-                        XposedBridge.log("Eitaa Ad Remover: Blocked SimpleAdsList creation!");
                     }
                 }
             );
-        } catch (Throwable t) {
-            XposedBridge.log("Eitaa Ad Remover: Failed to hook SimpleAdsList constructor: " + t.getMessage());
             
-            // Fallback: If constructor hook fails, try to hide it via onAttachedToWindow
+            XposedBridge.log("Eitaa Ad Remover: SimpleAdsList constructor hooked successfully!");
+            
+        } catch (Throwable t) {
+            XposedBridge.log("Eitaa Ad Remover: Failed to hook SimpleAdsList constructor!");
+            XposedBridge.log("Eitaa Ad Remover: Error: " + t.getMessage());
+            t.printStackTrace();
+            
+            // Fallback
             try {
+                XposedBridge.log("Eitaa Ad Remover: Trying fallback onAttachedToWindow hook...");
                 XposedHelpers.findAndHookMethod(
                     "ir.eitaa.ui.Components.SimpleAdsList", 
                     lpparam.classLoader, 
@@ -48,15 +59,15 @@ public class EitaaHook implements IXposedHookLoadPackage {
                     new XC_MethodHook() {
                         @Override
                         protected void beforeHookedMethod(MethodHookParam param) {
+                            XposedBridge.log("Eitaa Ad Remover: Hidden SimpleAdsList via onAttachedToWindow!");
                             View view = (View) param.thisObject;
                             view.setVisibility(View.GONE);
                             view.setLayoutParams(new ViewGroup.LayoutParams(0, 0));
-                            XposedBridge.log("Eitaa Ad Remover: Hidden SimpleAdsList via onAttachedToWindow!");
                         }
                     }
                 );
             } catch (Throwable t2) {
-                XposedBridge.log("Eitaa Ad Remover: Fallback hook also failed: " + t2.getMessage());
+                XposedBridge.log("Eitaa Ad Remover: Fallback also failed: " + t2.getMessage());
             }
         }
     }
