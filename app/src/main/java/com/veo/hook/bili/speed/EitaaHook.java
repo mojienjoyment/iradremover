@@ -1,9 +1,5 @@
 package com.moji.iradremover; // <--- MAKE SURE THIS MATCHES YOUR PACKAGE NAME!
 
-import android.view.View;
-import android.view.ViewGroup;
-import java.util.List;
-
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -14,10 +10,8 @@ public class EitaaHook implements IXposedHookLoadPackage {
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
-        // Catch-all log to verify the module is loading
         XposedBridge.log("Eitaa Ad Remover: Module loaded into package: " + lpparam.packageName);
 
-        // Only run the rest of the code if the app is Eitaa
         if (!lpparam.packageName.equals("ir.eitaa.messenger")) {
             return; 
         }
@@ -25,49 +19,32 @@ public class EitaaHook implements IXposedHookLoadPackage {
         XposedBridge.log("Eitaa Ad Remover: Successfully targeted Eitaa!");
 
         // ==========================================
-        // HOOK 1: Block the showAds method
+        // DIAGNOSTIC HOOK: Catch ANY TextView being set to "تبلیغات"
         // ==========================================
         try {
             XposedHelpers.findAndHookMethod(
-                "ir.eitaa.ui.Components.SimpleAdsList", 
+                "android.widget.TextView", 
                 lpparam.classLoader, 
-                "showAds", 
-                java.util.List.class, 
+                "setText", 
+                CharSequence.class, 
                 new XC_MethodHook() {
                     @Override
                     protected void beforeHookedMethod(MethodHookParam param) {
-                        // Abort the method execution. The ad list will remain empty, 
-                        // and the "تبلیغات" title will stay hidden.
-                        param.setResult(null); 
-                        XposedBridge.log("Eitaa Ad Remover: Blocked showAds method!");
+                        CharSequence text = (CharSequence) param.args[0];
+                        // Check if the text being set is the ad banner text
+                        if (text != null && text.toString().contains("تبلیغات")) {
+                            XposedBridge.log("==================================================");
+                            XposedBridge.log("Eitaa Ad Remover: CAUGHT 'تبلیغات' in TextView: " + param.thisObject.getClass().getName());
+                            // Print the stack trace to see exactly which class is creating this ad!
+                            XposedBridge.log("Eitaa Ad Remover: Stack trace:\n" + android.util.Log.getStackTraceString(new Throwable()));
+                            XposedBridge.log("==================================================");
+                        }
                     }
                 }
             );
+            XposedBridge.log("Eitaa Ad Remover: Diagnostic TextView hook installed!");
         } catch (Throwable t) {
-            XposedBridge.log("Eitaa Ad Remover: Failed to hook showAds: " + t.getMessage());
-        }
-
-        // ==========================================
-        // HOOK 2: Hide the view completely on creation
-        // ==========================================
-        try {
-            XposedHelpers.findAndHookConstructor(
-                "ir.eitaa.ui.Components.SimpleAdsList", 
-                lpparam.classLoader, 
-                android.content.Context.class, 
-                new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) {
-                        View view = (View) param.thisObject;
-                        // Force the view to be invisible and take up 0 space
-                        view.setVisibility(View.GONE);
-                        view.setLayoutParams(new ViewGroup.LayoutParams(0, 0));
-                        XposedBridge.log("Eitaa Ad Remover: Hidden SimpleAdsList view!");
-                    }
-                }
-            );
-        } catch (Throwable t) {
-            XposedBridge.log("Eitaa Ad Remover: Failed to hook constructor: " + t.getMessage());
+            XposedBridge.log("Eitaa Ad Remover: Failed to hook TextView: " + t.getMessage());
         }
     }
 }
