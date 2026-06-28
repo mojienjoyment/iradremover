@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="xposedscope">
+        <item>tv.danmaku.bili</item>
+        <item>com.bilibili.app.in</item>
+        <item>com.twitter.android</item>
+        <item>com.ss.android.ugc.aweme</item>
+        <item>com.ss.android.ugc.aweme.lite</item>
+        <item>com.ss.android.ugc.live</item>
+        <item>com.ss.android.ugc.aweme.mobile</item>
+        <item>com.xingin.xhs</item>
+        <item>com.sina.weibo</item>
+        <item>com.instagram.android</item>
+        <item>com.instander.android</item>
+        <item>org.telegram.messenger</item>
+        <item>com.tencent.mm</item>
+    </string-array>
+</resources>
