@@ -13,7 +13,7 @@ def getVersionCode(name) {
 }
 
 android {
-    namespace 'com.veo.hook.bili.speed'
+    namespace 'com.moji.iradremover'
     compileSdkVersion 33
     defaultConfig {
         applicationId "com.moji.eitaaadremover"
