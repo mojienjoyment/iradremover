@@ -16,7 +16,7 @@ android {
     namespace 'com.veo.hook.bili.speed'
     compileSdkVersion 33
     defaultConfig {
-        applicationId "com.veo.hook.bili.speed"
+        applicationId "com.moji.eitaaadremover"
         minSdkVersion 26
         targetSdkVersion 33
         versionCode getVersionCode(appVersionName)
